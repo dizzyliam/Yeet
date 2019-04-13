@@ -5,6 +5,7 @@ from flask_cors import CORS
 import time
 from pymongo import MongoClient
 import os
+import copy
 
 # Create Flask RESTful api with CORS
 app = Flask(__name__)
@@ -23,16 +24,16 @@ else:
 
 # Load collection and set expiration
 collection = db['yeets']
-yeets.drop_index("time_1")
-yeets.ensure_index("time", expireAfterSeconds=expiration_seconds)
+collection.drop_index("time_1")
+collection.ensure_index("time", expireAfterSeconds=expiration_seconds)
 
 
 # Define the function for the AT endpoint
 class at_app(Resource):
     def get(self, yeet):
         # Add document to DB collection and return
-        document = {"time": time.time(), "yeet": yeet, "data": request.args.get('data')}
-        collection.insert_one(document)
+        document = {"time": time.time(), "yeet_name": yeet, "data": request.args.get('data')}
+        collection.insert_one(copy.copy(document))
         return document
 
 
@@ -41,11 +42,11 @@ class from_app(Resource):
     def get(self, yeet):
 
         # Get most recent document with that yeet name and create response
-        document = collection.find_one({"yeet": yeet})
+        document = collection.find_one({"yeet_name": yeet})
         response = {"time_created": document["time"], "time_fetched": time.time(), "yeet_name": yeet, "data": document["data"]}
 
         # Delete document and return response
-        document.delete_one({"yeet": yeet})
+        collection.delete_one({"yeet_name": yeet})
         return response
 
 
