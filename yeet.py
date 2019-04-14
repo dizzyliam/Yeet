@@ -31,22 +31,30 @@ collection.ensure_index("time", expireAfterSeconds=expiration_seconds)
 # Define the function for the AT endpoint
 class at_app(Resource):
     def get(self, yeet):
-        # Add document to DB collection and return
+        # Add document to DB collection
         document = {"time": time.time(), "yeet_name": yeet, "data": request.args.get('data')}
         collection.insert_one(copy.copy(document))
+
+        # Return document with success message
+        document["success"] = True
         return document
 
 
 # Define the function for the FROM endpoint
 class from_app(Resource):
     def get(self, yeet):
-
-        # Get most recent document with that yeet name and create response
+        # Get most recent document with that yeet name and check if it exists
         document = collection.find_one({"yeet_name": yeet})
-        response = {"time_created": document["time"], "time_fetched": time.time(), "yeet_name": yeet, "data": document["data"]}
+        if not (document is None):
 
-        # Delete document and return response
-        collection.delete_one({"yeet_name": yeet})
+            # If it exists, create response and delete document
+            response = {"time_created": document["time"], "time_fetched": time.time(), "yeet_name": yeet, "data": document["data"], "success": True}
+            collection.delete_one({"yeet_name": yeet})
+
+        else:
+            # If it doesn't exist, return a message
+            response = {"success": False, "error": "That yeet does not exist, it could have expired or someone could have read it already."}
+
         return response
 
 
