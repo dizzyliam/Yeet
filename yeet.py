@@ -28,8 +28,8 @@ collection.drop_index("time_1")
 collection.ensure_index("time", expireAfterSeconds=expiration_seconds)
 
 
-# Define the function for the AT endpoint
-class at_app(Resource):
+# Define the function for the TO endpoint
+class to_app(Resource):
     def get(self, yeet):
         # Add document to DB collection
         document = {"time": time.time(), "yeet_name": yeet, "data": request.args.get('data')}
@@ -58,7 +58,7 @@ class from_app(Resource):
         return response
 
 
-api.add_resource(at_app, '/at/<yeet>')
+api.add_resource(to_app, '/to/<yeet>')
 api.add_resource(from_app, '/from/<yeet>')
 if __name__ == '__main__':
      app.run(port='8080')
